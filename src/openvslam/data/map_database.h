@@ -78,11 +78,19 @@ public:
      */
     std::vector<keyframe*> get_all_keyframes() const;
 
+    std::vector<keyframe*> get_all_sorted_keyframes() const;
+
     /**
      * Get the number of keyframes
      * @return
      */
     unsigned get_num_keyframes() const;
+
+    /**
+     * Get last keyframe
+     * @return last keyframe
+     */
+    keyframe* get_last_keyframe() const;
 
     /**
      * Get all of the landmarks in the database
@@ -156,6 +164,9 @@ public:
 
     //! origin keyframe
     keyframe* origin_keyfrm_ = nullptr;
+
+    // last keyframe
+    keyframe* last_keyframe = nullptr;
 
     //! mutex for locking ALL access to the database
     //! (NOTE: cannot used in map_database class)

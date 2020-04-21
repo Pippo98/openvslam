@@ -7,6 +7,7 @@
 #include "openvslam/data/map_database.h"
 #include "openvslam/util/converter.h"
 
+#include <algorithm>
 #include <spdlog/spdlog.h>
 #include <nlohmann/json.hpp>
 
@@ -27,6 +28,7 @@ map_database::~map_database() {
 void map_database::add_keyframe(keyframe* keyfrm) {
     std::lock_guard<std::mutex> lock(mtx_map_access_);
     keyframes_[keyfrm->id_] = keyfrm;
+    last_keyframe = keyfrm;
     if (keyfrm->id_ > max_keyfrm_id_) {
         max_keyfrm_id_ = keyfrm->id_;
     }
@@ -65,10 +67,28 @@ std::vector<keyframe*> map_database::get_all_keyframes() const {
     std::lock_guard<std::mutex> lock(mtx_map_access_);
     std::vector<keyframe*> keyframes;
     keyframes.reserve(keyframes_.size());
-    for (const auto id_keyframe : keyframes_) {
-        keyframes.push_back(id_keyframe.second);
+    for (const auto keyframe : keyframes_) {
+        keyframes.push_back(keyframe.second);
     }
     return keyframes;
+}
+
+std::vector<keyframe*> map_database::get_all_sorted_keyframes() const {
+    std::lock_guard<std::mutex> lock(mtx_map_access_);
+    std::vector<std::pair<unsigned int, keyframe*>> sorted_keyframes(keyframes_.begin(), keyframes_.end());
+    std::sort(sorted_keyframes.begin(), sorted_keyframes.end());
+    std::vector<keyframe*> keyframes;
+    keyframes.reserve(sorted_keyframes.size());
+    for (const auto keyframe : sorted_keyframes) {
+        keyframes.push_back(keyframe.second);
+    }
+    return keyframes;
+}
+
+keyframe* map_database::get_last_keyframe() const {
+    std::lock_guard<std::mutex> lock(mtx_map_access_);
+    keyframe* keyframe = last_keyframe;
+    return keyframe;
 }
 
 unsigned int map_database::get_num_keyframes() const {
@@ -114,6 +134,7 @@ void map_database::clear() {
     max_keyfrm_id_ = 0;
     local_landmarks_.clear();
     origin_keyfrm_ = nullptr;
+    last_keyframe = nullptr;
 
     frm_stats_.clear();
 
@@ -140,6 +161,7 @@ void map_database::from_json(camera_database* cam_db, bow_vocabulary* bow_vocab,
     max_keyfrm_id_ = 0;
     local_landmarks_.clear();
     origin_keyfrm_ = nullptr;
+    last_keyframe = nullptr;
 
     // Step 2. Register keyframes
     // If the object does not exist at this step, the corresponding pointer is set as nullptr.
@@ -261,6 +283,7 @@ void map_database::register_keyframe(camera_database* cam_db, bow_vocabulary* bo
     // Append to map database
     assert(!keyframes_.count(id));
     keyframes_[keyfrm->id_] = keyfrm;
+    last_keyframe = keyfrm;
     if (keyfrm->id_ > max_keyfrm_id_) {
         max_keyfrm_id_ = keyfrm->id_;
     }

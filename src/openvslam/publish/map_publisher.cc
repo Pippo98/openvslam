@@ -29,7 +29,16 @@ Mat44_t map_publisher::get_current_cam_pose() {
 
 unsigned int map_publisher::get_keyframes(std::vector<data::keyframe*>& all_keyfrms) {
     all_keyfrms = map_db_->get_all_keyframes();
-    return map_db_->get_num_keyframes();
+    return map_db_->get_max_keyframe_id();
+}
+
+unsigned int map_publisher::get_sorted_keyframes(std::vector<data::keyframe*>& all_keyfrms) {
+    all_keyfrms = map_db_->get_all_sorted_keyframes();
+    return map_db_->get_max_keyframe_id();
+}
+
+data::keyframe* map_publisher::get_last_keyframe() {
+    return map_db_->get_last_keyframe();
 }
 
 unsigned int map_publisher::get_landmarks(std::vector<data::landmark*>& all_landmarks,

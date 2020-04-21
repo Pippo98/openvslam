@@ -152,6 +152,7 @@ private:
     // menu panel
     std::unique_ptr<pangolin::Var<bool>> menu_follow_camera_;
     std::unique_ptr<pangolin::Var<bool>> menu_grid_;
+    std::unique_ptr<pangolin::Var<bool>> menu_show_cam_;
     std::unique_ptr<pangolin::Var<bool>> menu_show_keyfrms_;
     std::unique_ptr<pangolin::Var<bool>> menu_show_lms_;
     std::unique_ptr<pangolin::Var<bool>> menu_show_local_map_;

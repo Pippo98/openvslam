@@ -123,11 +123,11 @@ unsigned int frame_publisher::draw_tracked_points(cv::Mat& img, const std::vecto
         const cv::Point2f pt_end{curr_keypts.at(i).pt.x * mag + radius, curr_keypts.at(i).pt.y * mag + radius};
 
         if (mapping_is_enabled) {
-            cv::rectangle(img, pt_begin, pt_end, mapping_color_);
+            //cv::rectangle(img, pt_begin, pt_end, mapping_color_);
             cv::circle(img, curr_keypts.at(i).pt * mag, 2, mapping_color_, -1);
         }
         else {
-            cv::rectangle(img, pt_begin, pt_end, localization_color_);
+            //cv::rectangle(img, pt_begin, pt_end, localization_color_);
             cv::circle(img, curr_keypts.at(i).pt * mag, 2, localization_color_, -1);
         }
 

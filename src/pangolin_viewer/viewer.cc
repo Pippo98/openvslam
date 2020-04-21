@@ -124,7 +124,8 @@ void viewer::create_menu_panel() {
     pangolin::CreatePanel("menu").SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(175));
     menu_follow_camera_ = std::unique_ptr<pangolin::Var<bool>>(new pangolin::Var<bool>("menu.Follow Camera", true, true));
     menu_grid_ = std::unique_ptr<pangolin::Var<bool>>(new pangolin::Var<bool>("menu.Show Grid", false, true));
-    menu_show_keyfrms_ = std::unique_ptr<pangolin::Var<bool>>(new pangolin::Var<bool>("menu.Show Keyframes", true, true));
+    menu_show_cam_ = std::unique_ptr<pangolin::Var<bool>>(new pangolin::Var<bool>("menu.Show Camera", true, true));
+    menu_show_keyfrms_ = std::unique_ptr<pangolin::Var<bool>>(new pangolin::Var<bool>("menu.Show Keyframes", false, true));
     menu_show_lms_ = std::unique_ptr<pangolin::Var<bool>>(new pangolin::Var<bool>("menu.Show Landmarks", true, true));
     menu_show_local_map_ = std::unique_ptr<pangolin::Var<bool>>(new pangolin::Var<bool>("menu.Show Local Map", true, true));
     menu_show_graph_ = std::unique_ptr<pangolin::Var<bool>>(new pangolin::Var<bool>("menu.Show Graph", true, true));
@@ -202,11 +203,20 @@ void viewer::draw_keyframes() {
     const float w = keyfrm_size_ * *menu_frm_size_;
 
     std::vector<openvslam::data::keyframe*> keyfrms;
-    map_publisher_->get_keyframes(keyfrms);
+    map_publisher_->get_sorted_keyframes(keyfrms);
+
+    if (*menu_show_cam_) {
+        openvslam::data::keyframe* last_keyframe = nullptr;
+        last_keyframe = map_publisher_->get_last_keyframe();
+        if (last_keyframe != nullptr) {
+            draw_camera(last_keyframe->get_cam_pose_inv(), w);
+        }
+    }
 
     if (*menu_show_keyfrms_) {
         glLineWidth(keyfrm_line_width_);
         glColor3fv(cs_.kf_line_.data());
+
         for (const auto keyfrm : keyfrms) {
             if (!keyfrm || keyfrm->will_be_erased()) {
                 continue;
@@ -223,8 +233,8 @@ void viewer::draw_keyframes() {
             glVertex3fv(cam_center_1.cast<float>().eval().data());
             glVertex3fv(cam_center_2.cast<float>().eval().data());
         };
-
-        glBegin(GL_LINES);
+        glPushMatrix();
+        glBegin(GL_LINE_STRIP);
 
         for (const auto keyfrm : keyfrms) {
             if (!keyfrm || keyfrm->will_be_erased()) {
@@ -232,6 +242,7 @@ void viewer::draw_keyframes() {
             }
 
             const openvslam::Vec3_t cam_center_1 = keyfrm->get_cam_center();
+            glVertex3fv(cam_center_1.cast<float>().eval().data());
 
             // covisibility graph
             const auto covisibilities = keyfrm->graph_node_->get_covisibilities_over_weight(100);
@@ -244,32 +255,33 @@ void viewer::draw_keyframes() {
                         continue;
                     }
                     const openvslam::Vec3_t cam_center_2 = covisibility->get_cam_center();
-                    draw_edge(cam_center_1, cam_center_2);
+                    //draw_edge(cam_center_1, cam_center_2);
                 }
             }
 
-            // spanning tree
-            auto spanning_parent = keyfrm->graph_node_->get_spanning_parent();
-            if (spanning_parent) {
-                const openvslam::Vec3_t cam_center_2 = spanning_parent->get_cam_center();
-                draw_edge(cam_center_1, cam_center_2);
-            }
+            // // spanning tree
+            // auto spanning_parent = keyfrm->graph_node_->get_spanning_parent();
+            // if (spanning_parent) {
+            //     const openvslam::Vec3_t cam_center_2 = spanning_parent->get_cam_center();
+            //     draw_edge(cam_center_1, cam_center_2);
+            // }
 
-            // loop edges
-            const auto loop_edges = keyfrm->graph_node_->get_loop_edges();
-            for (const auto loop_edge : loop_edges) {
-                if (!loop_edge) {
-                    continue;
-                }
-                if (loop_edge->id_ < keyfrm->id_) {
-                    continue;
-                }
-                const openvslam::Vec3_t cam_center_2 = loop_edge->get_cam_center();
-                draw_edge(cam_center_1, cam_center_2);
-            }
+            // // loop edges
+            // const auto loop_edges = keyfrm->graph_node_->get_loop_edges();
+            // for (const auto loop_edge : loop_edges) {
+            //     if (!loop_edge) {
+            //         continue;
+            //     }
+            //     if (loop_edge->id_ < keyfrm->id_) {
+            //         continue;
+            //     }
+            //     const openvslam::Vec3_t cam_center_2 = loop_edge->get_cam_center();
+            //     draw_edge(cam_center_1, cam_center_2);
+            // }
         }
 
         glEnd();
+        glPopMatrix();
     }
 }
 

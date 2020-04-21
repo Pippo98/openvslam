@@ -54,6 +54,14 @@ public:
      */
     unsigned int get_keyframes(std::vector<data::keyframe*>& all_keyfrms);
 
+    unsigned int get_sorted_keyframes(std::vector<data::keyframe*>& all_keyfrms);
+
+    /**
+     * Get all last keyframe
+     * @return last keyframe
+     */
+    data::keyframe* get_last_keyframe();
+
     /**
      * Get all landmarks and local landmarks
      * @param all_landmarks

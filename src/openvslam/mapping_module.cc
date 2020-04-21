@@ -187,7 +187,6 @@ void mapping_module::store_new_keyframe() {
             local_map_cleaner_->add_fresh_landmark(lm);
             continue;
         }
-
         // update connection
         lm->add_observation(cur_keyfrm_, idx);
         // update geometry
